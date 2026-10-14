@@ -1,5 +1,7 @@
 package com.example.GameVault.service;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.example.GameVault.Model.Juego;
 import com.example.GameVault.repository.IJuegoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -22,7 +25,8 @@ public class JuegoService {
     @Autowired
     private IJuegoRepository juegoRepository;
 
-
+    @Autowired(required = false)
+    private Cloudinary cloudinary;
 
 
     private static final String UPLOAD_DIR = "src/main/resources/static/uploads/";
@@ -41,7 +45,7 @@ public class JuegoService {
         if (!portada.isEmpty()) {
             // OPCIÓN 1: Subida Local (Como estaba antes, pero movido al servicio)
             // urlImagen = guardarImagenLocal(portada);
-            urlImagen = guardarImagenLocal(portada);
+            urlImagen = guardarImagenCloudinary(portada);
         }
 
 
@@ -51,6 +55,13 @@ public class JuegoService {
         juegoRepository.save(juego);
     }
 
+    public void eliminarJuego(Long id) {
+        juegoRepository.deleteById(id);
+    }
+
+    public Juego obtenerJuegoId(Long id){
+        return juegoRepository.findById(id).orElse(null);
+    }
 
     /**
      * Muestra de un método de búsqueda personalizado.
@@ -86,4 +97,17 @@ public class JuegoService {
         }
     }
 
-}
+    private String guardarImagenCloudinary(MultipartFile portada) {
+        try {
+            // Sube el archivo a Cloudinary
+            Map uploadResult = cloudinary.uploader().upload(portada.getBytes(), ObjectUtils.emptyMap());
+            // Obtiene la URL pública generada por Cloudinary
+            return uploadResult.get("secure_url").toString();
+        } catch (Exception e) {
+            System.err.println("Error al subir a Cloudinary. Revisa tus credenciales.");
+            e.printStackTrace();
+            return "default.png";
+        }
+    }
+
+    }

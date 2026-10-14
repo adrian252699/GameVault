@@ -22,4 +22,14 @@ public class Juego {
     @Column(name = "portada_url")
     private String portadaURL;
 
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "usuario_id")
+    private Usuario usuario;
+
+    @Column(nullable = false)
+    private String categoria;
+
+    @Column
+    private Double precio;
+
 }
