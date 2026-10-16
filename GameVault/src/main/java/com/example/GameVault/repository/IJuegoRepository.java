@@ -1,6 +1,6 @@
 package com.example.GameVault.repository;
 
-import com.example.GameVault.Model.Juego;
+import com.example.GameVault.model.Juego;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

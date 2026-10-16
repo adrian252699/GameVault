@@ -1,7 +1,9 @@
 package com.example.GameVault.controller;
 
-import com.example.GameVault.Model.Juego;
+import com.example.GameVault.model.Juego;
+import com.example.GameVault.model.Usuario;
 import com.example.GameVault.service.JuegoService;
+import com.example.GameVault.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -11,18 +13,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
 @Controller
 public class GameController {
     @Autowired
-    JuegoService juegoService;
+    private JuegoService juegoService;
+
+    @Autowired
+    private UsuarioService usuarioService;
 
     @GetMapping("/fragments-demo")
     public String fragments() {
@@ -36,8 +33,16 @@ public class GameController {
         return "juegos";
     }
 
+    @GetMapping("/mis-juegos")
+    public String misjuegos(Model model) {
+        model.addAttribute("usuario", this.usuarioService.obtenerUsuarioLogeado());
+        model.addAttribute("juegos", juegoService.listarTodos());
+        return "mis-juegos";
+    }
+
     @GetMapping("/juegos/nuevo")
-    public String formulario() {
+    public String formulario(Model model) {
+        model.addAttribute("juego", new Juego());
         return "formulario";
     }
 
@@ -47,11 +52,19 @@ public class GameController {
             ,@RequestParam("categoria") String categoria
             , @RequestParam("portada") MultipartFile portada) {
 
+        Usuario usuarioLogeado = usuarioService.obtenerUsuarioLogeado();
+
+        if (usuarioLogeado == null) {
+            return "redirect:/login";
+        }
+
         Juego juego = new Juego();
         juego.setTitulo(titulo);
         juego.setDescripcion(descripcion);
         juego.setPrecio(precio);
         juego.setCategoria(categoria);
+
+        juego.setUsuario(usuarioLogeado);
 
         juegoService.guardarJuego(juego,portada);
 
@@ -65,11 +78,40 @@ public class GameController {
         return "redirect:/juegos";
     }
 
-     @GetMapping("/juegos/editar/{id{")
+     @GetMapping("/juegos/editar/{id}")
     public String editarJuego(@PathVariable Long id, Model model){
         Juego juego= juegoService.obtenerJuegoId(id);
         model.addAttribute("juego", juego);
-        return "redirect:/formulario";
+        return "formulario";
      }
+
+    @PostMapping("/juegos/editar/{id}")
+    public String editarJuego(
+            @PathVariable Long id,
+            @RequestParam("titulo") String titulo,
+            @RequestParam("descripcion") String descripcion,
+            @RequestParam("precio") Double precio,
+            @RequestParam("categoria") String categoria,
+            @RequestParam(value = "portada", required = false) MultipartFile portada) {
+
+        Usuario usuarioLogeado = usuarioService.obtenerUsuarioLogeado();
+
+        if (usuarioLogeado == null) {
+            return "redirect:/login";
+        }
+
+        Juego juego = juegoService.obtenerJuegoId(id);
+        juego.setTitulo(titulo);
+        juego.setDescripcion(descripcion);
+        juego.setPrecio(precio);
+        juego.setCategoria(categoria);
+
+        juego.setUsuario(usuarioLogeado);
+
+        juegoService.guardarJuego(juego,portada);
+
+        // Redirigimos a la lista de juegos (Patrón PRG - Post/Redirect/Get)
+        return "redirect:/juegos";
+    }
 
 }

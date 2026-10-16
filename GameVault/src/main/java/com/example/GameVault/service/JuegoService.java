@@ -2,10 +2,9 @@ package com.example.GameVault.service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import com.example.GameVault.Model.Juego;
+import com.example.GameVault.model.Juego;
 import com.example.GameVault.repository.IJuegoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -49,7 +48,7 @@ public class JuegoService {
         }
 
 
-        juego.setPortadaURL(urlImagen);
+        juego.setPortadaUrl(urlImagen);
 
         // Guardamos el objeto en la base de datos
         juegoRepository.save(juego);
